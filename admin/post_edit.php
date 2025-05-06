@@ -3,68 +3,71 @@ session_start();
 require_once '../config/database.php';
 
 // Check if user is logged in
-if(!isset($_SESSION['user_id'])) {
-    header("Location: ../login.php");
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php");
     exit();
 }
 
-$post = [
-    'id' => '',
-    'title' => '',
-    'content' => '',
-    'category_id' => '',
-    'status' => 'draft',
-    'featured_image' => ''
-];
+// Check if user is admin or editor
+if ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'editor') {
+    header("Location: dashboard.php");
+    exit();
+}
 
-// Get categories for dropdown
+$post_id = isset($_GET['id']) ? $_GET['id'] : null;
+$post = null;
+$categories = [];
+
+// Get all categories
 $stmt = $pdo->query("SELECT * FROM categories ORDER BY name");
 $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Handle form submission
-if($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $title = $_POST['title'];
-    $content = $_POST['content'];
-    $category_id = $_POST['category_id'] ?: null;
-    $status = $_POST['status'];
-    $slug = strtolower(str_replace(' ', '-', $title));
-
-    // Handle featured image upload
-    $featured_image = $post['featured_image'];
-    if(isset($_FILES['featured_image']) && $_FILES['featured_image']['error'] == 0) {
-        $target_dir = "../uploads/";
-        if(!file_exists($target_dir)) {
-            mkdir($target_dir, 0777, true);
-        }
-        
-        $file_extension = strtolower(pathinfo($_FILES["featured_image"]["name"], PATHINFO_EXTENSION));
-        $new_filename = uniqid() . '.' . $file_extension;
-        $target_file = $target_dir . $new_filename;
-        
-        if(move_uploaded_file($_FILES["featured_image"]["tmp_name"], $target_file)) {
-            $featured_image = 'uploads/' . $new_filename;
-        }
+if ($post_id) {
+    // Get post data
+    $stmt = $pdo->prepare("SELECT * FROM posts WHERE id = ?");
+    $stmt->execute([$post_id]);
+    $post = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if (!$post) {
+        header("Location: posts.php");
+        exit();
     }
-
-    if(isset($_POST['id'])) {
-        // Update existing post
-        $stmt = $pdo->prepare("UPDATE posts SET title = ?, content = ?, category_id = ?, status = ?, featured_image = ?, slug = ? WHERE id = ?");
-        $stmt->execute([$title, $content, $category_id, $status, $featured_image, $slug, $_POST['id']]);
-    } else {
-        // Create new post
-        $stmt = $pdo->prepare("INSERT INTO posts (title, content, category_id, status, featured_image, slug, author_id) VALUES (?, ?, ?, ?, ?, ?, ?)");
-        $stmt->execute([$title, $content, $category_id, $status, $featured_image, $slug, $_SESSION['user_id']]);
-    }
-
-    header("Location: posts.php");
-    exit();
 }
 
-// Get post data if editing
-if(isset($_GET['id'])) {
-    $stmt = $pdo->prepare("SELECT * FROM posts WHERE id = ?");
-    $stmt->execute([$_GET['id']]);
-    $post = $stmt->fetch(PDO::FETCH_ASSOC);
+// Handle form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $title = $_POST['title'];
+    $content = $_POST['content'];
+    $category_id = $_POST['category_id'];
+    $status = $_POST['status'];
+    $user_id = $_SESSION['user_id'];
+    
+    // Handle featured image upload
+    $featured_image = $post ? $post['featured_image'] : null;
+    if (isset($_FILES['featured_image']) && $_FILES['featured_image']['error'] === 0) {
+        $upload_dir = '../uploads/';
+        $file_extension = strtolower(pathinfo($_FILES['featured_image']['name'], PATHINFO_EXTENSION));
+        $file_name = uniqid() . '.' . $file_extension;
+        $target_file = $upload_dir . $file_name;
+        
+        if (move_uploaded_file($_FILES['featured_image']['tmp_name'], $target_file)) {
+            $featured_image = $file_name;
+        }
+    }
+    
+    if ($post_id) {
+        // Update existing post
+        $stmt = $pdo->prepare("UPDATE posts SET title = ?, content = ?, category_id = ?, featured_image = ?, status = ?, updated_at = NOW() WHERE id = ?");
+        $stmt->execute([$title, $content, $category_id, $featured_image, $status, $post_id]);
+    } else {
+        // Create new post
+        $stmt = $pdo->prepare("INSERT INTO posts (title, content, category_id, featured_image, status, user_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())");
+        $stmt->execute([$title, $content, $category_id, $featured_image, $status, $user_id]);
+        $post_id = $pdo->lastInsertId();
+    }
+    
+    header("Location: posts.php");
+    exit();
 }
 ?>
 
@@ -73,17 +76,13 @@ if(isset($_GET['id'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $post['id'] ? 'Edit' : 'Add'; ?> Post - CMS Sederhana</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- AdminLTE CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <!-- Summernote CSS -->
+    <title><?php echo $post ? 'Edit Post' : 'Create Post'; ?> - CMS Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs4.min.css" rel="stylesheet">
+    <link href="../assets/css/admin-post-edit.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
-<body class="hold-transition sidebar-mini">
+<body>
     <div class="wrapper">
         <!-- Navbar -->
         <nav class="main-header navbar navbar-expand navbar-white navbar-light">
@@ -106,14 +105,12 @@ if(isset($_GET['id'])) {
             <a href="dashboard.php" class="brand-link">
                 <span class="brand-text font-weight-light">CMS Sederhana</span>
             </a>
-
             <div class="sidebar">
                 <div class="user-panel mt-3 pb-3 mb-3 d-flex">
                     <div class="info">
-                        <a href="#" class="d-block"><?php echo htmlspecialchars($_SESSION['username']); ?></a>
+                        <a href="#" class="d-block"><?php echo htmlspecialchars($_SESSION['username']); ?> <span class="badge bg-info text-dark ms-2"><?php echo ucfirst($_SESSION['role']); ?></span></a>
                     </div>
                 </div>
-
                 <nav class="mt-2">
                     <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
                         <li class="nav-item">
@@ -147,89 +144,86 @@ if(isset($_GET['id'])) {
             </div>
         </aside>
 
-        <!-- Content Wrapper -->
+        <!-- Main Content -->
         <div class="content-wrapper">
             <div class="content-header">
-                <div class="container-fluid">
-                    <div class="row mb-2">
-                        <div class="col-sm-6">
-                            <h1 class="m-0"><?php echo $post['id'] ? 'Edit' : 'Add'; ?> Post</h1>
-                        </div>
+                <div class="post-edit-header">
+                    <h1 class="post-edit-title"><?php echo $post ? 'Edit Post' : 'Create Post'; ?></h1>
+                    <div class="post-edit-actions">
+                        <a href="posts.php" class="btn btn-default">
+                            <i class="fas fa-arrow-left"></i>
+                            Back to Posts
+                        </a>
                     </div>
                 </div>
             </div>
 
             <div class="content">
-                <div class="container-fluid">
-                    <div class="card">
-                        <div class="card-body">
-                            <form action="" method="post" enctype="multipart/form-data">
-                                <input type="hidden" name="id" value="<?php echo $post['id']; ?>">
-                                
-                                <div class="form-group">
-                                    <label for="title">Title</label>
-                                    <input type="text" class="form-control" id="title" name="title" value="<?php echo htmlspecialchars($post['title']); ?>" required>
-                                </div>
+                <div class="card">
+                    <div class="card-body">
+                        <form class="post-form" method="POST" enctype="multipart/form-data">
+                            <?php if (isset($error)): ?>
+                            <div class="alert alert-danger">
+                                <?php echo htmlspecialchars($error); ?>
+                            </div>
+                            <?php endif; ?>
 
-                                <div class="form-group">
-                                    <label for="category_id">Category</label>
-                                    <select class="form-control" id="category_id" name="category_id">
-                                        <option value="">Select Category</option>
-                                        <?php foreach($categories as $category): ?>
-                                            <option value="<?php echo $category['id']; ?>" <?php echo $category['id'] == $post['category_id'] ? 'selected' : ''; ?>>
-                                                <?php echo htmlspecialchars($category['name']); ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                </div>
+                            <div class="form-group">
+                                <label for="title">Title</label>
+                                <input type="text" class="form-control" id="title" name="title" required
+                                    value="<?php echo $post ? htmlspecialchars($post['title']) : ''; ?>">
+                            </div>
 
-                                <div class="form-group">
-                                    <label for="content">Content</label>
-                                    <textarea class="form-control" id="content" name="content" rows="10"><?php echo htmlspecialchars($post['content']); ?></textarea>
-                                </div>
+                            <div class="form-group">
+                                <label for="content">Content</label>
+                                <textarea class="form-control" id="content" name="content" required><?php echo $post ? htmlspecialchars($post['content']) : ''; ?></textarea>
+                            </div>
 
-                                <div class="form-group">
-                                    <label for="featured_image">Featured Image</label>
-                                    <?php if($post['featured_image']): ?>
-                                        <div class="mb-2">
-                                            <img src="../<?php echo htmlspecialchars($post['featured_image']); ?>" alt="Featured Image" style="max-width: 200px;">
-                                        </div>
-                                    <?php endif; ?>
-                                    <input type="file" class="form-control" id="featured_image" name="featured_image">
-                                </div>
+                            <div class="form-group">
+                                <label for="category_id">Category</label>
+                                <select class="form-control" id="category_id" name="category_id" required>
+                                    <option value="">Select Category</option>
+                                    <?php foreach ($categories as $category): ?>
+                                    <option value="<?php echo $category['id']; ?>" <?php echo $post && $post['category_id'] == $category['id'] ? 'selected' : ''; ?>>
+                                        <?php echo htmlspecialchars($category['name']); ?>
+                                    </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
 
-                                <div class="form-group">
-                                    <label for="status">Status</label>
-                                    <select class="form-control" id="status" name="status">
-                                        <option value="draft" <?php echo $post['status'] == 'draft' ? 'selected' : ''; ?>>Draft</option>
-                                        <option value="published" <?php echo $post['status'] == 'published' ? 'selected' : ''; ?>>Published</option>
-                                    </select>
+                            <div class="form-group">
+                                <label for="featured_image">Featured Image</label>
+                                <input type="file" class="form-control" id="featured_image" name="featured_image" accept="image/*">
+                                <?php if ($post && $post['featured_image']): ?>
+                                <div class="featured-image-preview">
+                                    <img src="../uploads/<?php echo htmlspecialchars($post['featured_image']); ?>" alt="Featured Image">
                                 </div>
+                                <?php endif; ?>
+                            </div>
 
-                                <button type="submit" class="btn btn-primary">Save Post</button>
-                                <a href="posts.php" class="btn btn-default">Cancel</a>
-                            </form>
-                        </div>
+                            <div class="form-group">
+                                <label for="status">Status</label>
+                                <select class="form-control" id="status" name="status" required>
+                                    <option value="draft" <?php echo $post && $post['status'] === 'draft' ? 'selected' : ''; ?>>Draft</option>
+                                    <option value="published" <?php echo $post && $post['status'] === 'published' ? 'selected' : ''; ?>>Published</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i>
+                                    <?php echo $post ? 'Update Post' : 'Create Post'; ?>
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
         </div>
-
-        <footer class="main-footer">
-            <div class="float-right d-none d-sm-block">
-                <b>Version</b> 1.0.0
-            </div>
-            <strong>Copyright &copy; <?php echo date('Y'); ?> <a href="../index.php">CMS Sederhana</a>.</strong> All rights reserved.
-        </footer>
     </div>
 
-    <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- AdminLTE JS -->
-    <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
-    <!-- Summernote JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs4.min.js"></script>
     <script>
         $(document).ready(function() {

@@ -3,8 +3,8 @@ session_start();
 require_once '../config/database.php';
 
 // Check if user is logged in
-if(!isset($_SESSION['user_id'])) {
-    header("Location: ../login.php");
+if(!isset($_SESSION['user_id']) || $_SESSION['role'] == 'view') {
+    header("Location: ../index.php");
     exit();
 }
 
@@ -34,10 +34,11 @@ $posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <title>Posts - CMS Sederhana</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- AdminLTE CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
+    <!-- Custom CSS -->
+
+    <link href="../assets/css/admin-posts.css" rel="stylesheet">
     <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="hold-transition sidebar-mini">
     <div class="wrapper">
@@ -66,7 +67,7 @@ $posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <div class="sidebar">
                 <div class="user-panel mt-3 pb-3 mb-3 d-flex">
                     <div class="info">
-                        <a href="#" class="d-block"><?php echo htmlspecialchars($_SESSION['username']); ?></a>
+                        <a href="#" class="d-block"><?php echo htmlspecialchars($_SESSION['username']); ?> <span class="badge bg-info text-dark ms-2"><?php echo ucfirst($_SESSION['role']); ?></span></a>
                     </div>
                 </div>
 

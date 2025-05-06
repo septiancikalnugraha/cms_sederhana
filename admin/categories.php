@@ -3,8 +3,8 @@ session_start();
 require_once '../config/database.php';
 
 // Check if user is logged in
-if(!isset($_SESSION['user_id'])) {
-    header("Location: ../login.php");
+if(!isset($_SESSION['user_id']) || $_SESSION['role'] == 'view') {
+    header("Location: ../index.php");
     exit();
 }
 
@@ -54,10 +54,11 @@ $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <title>Categories - CMS Sederhana</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- AdminLTE CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
+    <!-- Custom CSS -->
+    <link href="../assets/css/style.css" rel="stylesheet">
+    <link href="../assets/css/admin-categories.css" rel="stylesheet">
     <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="hold-transition sidebar-mini">
     <div class="wrapper">
@@ -86,7 +87,7 @@ $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <div class="sidebar">
                 <div class="user-panel mt-3 pb-3 mb-3 d-flex">
                     <div class="info">
-                        <a href="#" class="d-block"><?php echo htmlspecialchars($_SESSION['username']); ?></a>
+                        <a href="#" class="d-block"><?php echo htmlspecialchars($_SESSION['username']); ?> <span class="badge bg-info text-dark ms-2"><?php echo ucfirst($_SESSION['role']); ?></span></a>
                     </div>
                 </div>
 
@@ -130,11 +131,6 @@ $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <div class="row mb-2">
                         <div class="col-sm-6">
                             <h1 class="m-0">Categories</h1>
-                        </div>
-                        <div class="col-sm-6">
-                            <button type="button" class="btn btn-primary float-right" data-toggle="modal" data-target="#categoryModal">
-                                <i class="fas fa-plus"></i> Add New Category
-                            </button>
                         </div>
                     </div>
                 </div>
@@ -223,8 +219,6 @@ $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- AdminLTE JS -->
-    <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
     <script>
         function editCategory(category) {
             document.getElementById('category_id').value = category.id;
@@ -241,6 +235,38 @@ $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
             document.getElementById('description').value = '';
             document.getElementById('categoryModalLabel').textContent = 'Add New Category';
         });
+        // Fix for Bootstrap 5 modal functionality
+document.addEventListener('DOMContentLoaded', function() {
+    // Define modal element
+    const categoryModal = new bootstrap.Modal(document.getElementById('categoryModal'));
+    
+    // Open modal when "Add New Category" button is clicked
+    document.querySelector('[data-toggle="modal"]').addEventListener('click', function() {
+        categoryModal.show();
+    });
+    
+    // Close modal when "Close" button is clicked
+    document.querySelector('[data-dismiss="modal"]').addEventListener('click', function() {
+        categoryModal.hide();
+    });
+    
+    // Function to edit category (keep your existing logic)
+    window.editCategory = function(category) {
+        document.getElementById('category_id').value = category.id;
+        document.getElementById('name').value = category.name;
+        document.getElementById('description').value = category.description;
+        document.getElementById('categoryModalLabel').textContent = 'Edit Category';
+        categoryModal.show();
+    }
+    
+    // Reset form when modal is closed
+    document.getElementById('categoryModal').addEventListener('hidden.bs.modal', function () {
+        document.getElementById('category_id').value = '';
+        document.getElementById('name').value = '';
+        document.getElementById('description').value = '';
+        document.getElementById('categoryModalLabel').textContent = 'Add New Category';
+    });
+});
     </script>
 </body>
 </html> 

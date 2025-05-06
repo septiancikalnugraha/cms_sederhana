@@ -12,20 +12,39 @@ $error = '';
 if($_SERVER['REQUEST_METHOD'] == 'POST') {
     $username = $_POST['username'];
     $password = $_POST['password'];
+    $role = $_POST['role'];
 
     $stmt = $pdo->prepare("SELECT * FROM users WHERE username = ?");
     $stmt->execute([$username]);
     $user = $stmt->fetch();
 
-    if($user && password_verify($password, $user['password'])) {
-        $_SESSION['user_id'] = $user['id'];
-        $_SESSION['username'] = $user['username'];
-        $_SESSION['role'] = $user['role'];
-        
-        header("Location: admin/dashboard.php");
-        exit();
+    if($user) {
+        if(password_verify($password, $user['password'])) {
+            // Debug: tampilkan role di database dan role yang dipilih
+            echo "<div style='background:#fff;padding:10px;border:1px solid #ccc;margin-bottom:10px;'>";
+            echo "Role di database: <b>" . htmlspecialchars($user['role']) . "</b><br>";
+            echo "Role yang dipilih: <b>" . htmlspecialchars($role) . "</b><br>";
+            echo "</div>";
+            if(strtolower($user['role']) === strtolower($role)) {
+                $_SESSION['user_id'] = $user['id'];
+                $_SESSION['username'] = $user['username'];
+                $_SESSION['role'] = $user['role'];
+                if (strtolower($user['role']) === 'view') {
+                    header("Location: admin/dashboard_view.php");
+                } elseif (strtolower($user['role']) === 'editor') {
+                    header("Location: admin/dashboard_editor.php");
+                } else {
+                    header("Location: admin/dashboard.php");
+                }
+                exit();
+            } else {
+                $error = 'Role yang dipilih tidak sesuai.';
+            }
+        } else {
+            $error = 'Password salah.';
+        }
     } else {
-        $error = 'Invalid username or password';
+        $error = 'Username tidak ditemukan.';
     }
 }
 ?>
@@ -38,8 +57,10 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
     <title>Login - CMS Sederhana</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- AdminLTE CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
+    <!-- Custom CSS -->
+    <link href="assets/css/login.css" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="hold-transition login-page">
     <div class="login-box">
@@ -71,12 +92,24 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
                             </div>
                         </div>
                     </div>
+                    <div class="mb-3">
+                        <select class="form-control" name="role" required>
+                            <option value="">Pilih Role</option>
+                            <option value="admin">Admin</option>
+                            <option value="editor">Editor</option>
+                            <option value="author">Author</option>
+                            <option value="view">View</option>
+                        </select>
+                    </div>
                     <div class="row">
                         <div class="col-12">
                             <button type="submit" class="btn btn-primary btn-block">Sign In</button>
                         </div>
                     </div>
                 </form>
+                <p class="mt-3 mb-1 text-center">
+                    <a href="register.php">Belum punya akun? Register</a>
+                </p>
             </div>
         </div>
     </div>

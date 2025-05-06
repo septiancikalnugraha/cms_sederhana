@@ -40,6 +40,11 @@ $posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Custom CSS -->
     <link href="assets/css/style.css" rel="stylesheet">
+    <link href="assets/css/category.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <!-- Navigation -->
@@ -82,20 +87,20 @@ $posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
                 <?php if($posts): ?>
                     <?php foreach($posts as $post): ?>
-                        <article class="card mb-4">
+                        <article class="card mb-4 post-card">
                             <?php if($post['featured_image']): ?>
                                 <img src="<?php echo htmlspecialchars($post['featured_image']); ?>" class="card-img-top" alt="<?php echo htmlspecialchars($post['title']); ?>">
                             <?php endif; ?>
                             <div class="card-body">
                                 <h2 class="card-title">
-                                    <a href="post.php?slug=<?php echo htmlspecialchars($post['slug']); ?>" class="text-decoration-none text-dark">
+                                    <a href="post.php?slug=<?php echo htmlspecialchars($post['slug']); ?>">
                                         <?php echo htmlspecialchars($post['title']); ?>
                                     </a>
                                 </h2>
-                                <p class="card-text text-muted">
-                                    By <?php echo htmlspecialchars($post['author_name']); ?> | 
-                                    <?php echo date('F j, Y', strtotime($post['created_at'])); ?>
-                                </p>
+                                <div class="meta mb-2">
+                                    <span class="badge bg-primary"><i class="fas fa-user"></i> <?php echo htmlspecialchars($post['author_name']); ?></span>
+                                    <span class="ms-2"><i class="fas fa-calendar-alt"></i> <?php echo date('F j, Y', strtotime($post['created_at'])); ?></span>
+                                </div>
                                 <p class="card-text">
                                     <?php echo substr(strip_tags($post['content']), 0, 200) . '...'; ?>
                                 </p>
@@ -109,9 +114,9 @@ $posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     </div>
                 <?php endif; ?>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-4 sidebar">
                 <!-- Sidebar -->
-                <div class="card">
+                <div class="card mb-4">
                     <div class="card-header">
                         Categories
                     </div>
@@ -122,9 +127,18 @@ $posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         foreach($categories as $cat):
                         ?>
                             <a href="category.php?slug=<?php echo htmlspecialchars($cat['slug']); ?>" class="d-block mb-2">
-                                <?php echo htmlspecialchars($cat['name']); ?>
+                                <i class="fas fa-tag me-1"></i> <?php echo htmlspecialchars($cat['name']); ?>
                             </a>
                         <?php endforeach; ?>
+                    </div>
+                </div>
+                <div class="card mb-4">
+                    <div class="card-header bg-success text-white">
+                        <i class="fas fa-info-circle me-1"></i> About This Site
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-2">CMS Sederhana adalah platform blog modern, responsif, dan mudah digunakan untuk berbagi informasi, berita, dan inspirasi bagi semua kalangan.</p>
+                        <p class="mb-0"><i class="fas fa-users me-1"></i> Untuk penulis, pembaca, dan komunitas!</p>
                     </div>
                 </div>
             </div>

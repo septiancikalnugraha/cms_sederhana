@@ -7,7 +7,7 @@ CREATE TABLE users (
     password VARCHAR(255) NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
     full_name VARCHAR(100) NOT NULL,
-    role ENUM('admin', 'editor', 'author') NOT NULL,
+    role ENUM('admin', 'editor', 'author','view') NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -37,3 +37,10 @@ CREATE TABLE posts (
 -- Insert default admin user (password: admin123)
 INSERT INTO users (username, password, email, full_name, role) 
 VALUES ('admin', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin@example.com', 'Administrator', 'admin'); 
+
+INSERT INTO categories (name, slug, description) VALUES
+('Berita', 'berita', 'Kategori berita'),
+('Teknologi', 'teknologi', 'Kategori teknologi'),
+('Olahraga', 'olahraga', 'Kategori olahraga');
+
+SELECT username, role FROM users WHERE username = 'USERNAME_YANG_DICOBA'; 

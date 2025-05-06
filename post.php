@@ -44,6 +44,11 @@ $related_posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Custom CSS -->
     <link href="assets/css/style.css" rel="stylesheet">
+    <link href="assets/css/post.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <!-- Navigation -->
@@ -81,16 +86,14 @@ $related_posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <div class="col-md-8">
                 <article>
                     <h1 class="mb-3"><?php echo htmlspecialchars($post['title']); ?></h1>
-                    <div class="text-muted mb-4">
-                        By <?php echo htmlspecialchars($post['author_name']); ?> in 
-                        <a href="category.php?slug=<?php echo htmlspecialchars($post['category_name']); ?>" class="text-decoration-none">
-                            <?php echo htmlspecialchars($post['category_name']); ?>
-                        </a> | 
-                        <?php echo date('F j, Y', strtotime($post['created_at'])); ?>
+                    <div class="meta mb-3">
+                        <span class="badge bg-primary"><i class="fas fa-user"></i> <?php echo htmlspecialchars($post['author_name']); ?></span>
+                        <span class="badge bg-success"><i class="fas fa-folder"></i> <?php echo htmlspecialchars($post['category_name']); ?></span>
+                        <span class="ms-2"><i class="fas fa-calendar-alt"></i> <?php echo date('F j, Y', strtotime($post['created_at'])); ?></span>
                     </div>
 
                     <?php if($post['featured_image']): ?>
-                        <img src="<?php echo htmlspecialchars($post['featured_image']); ?>" class="img-fluid mb-4" alt="<?php echo htmlspecialchars($post['title']); ?>">
+                        <img src="<?php echo htmlspecialchars($post['featured_image']); ?>" class="featured-img" alt="<?php echo htmlspecialchars($post['title']); ?>">
                     <?php endif; ?>
 
                     <div class="content">
@@ -104,7 +107,7 @@ $related_posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <div class="row">
                         <?php foreach($related_posts as $related_post): ?>
                         <div class="col-md-4">
-                            <div class="card mb-4">
+                            <div class="card mb-4 related">
                                 <?php if($related_post['featured_image']): ?>
                                     <img src="<?php echo htmlspecialchars($related_post['featured_image']); ?>" class="card-img-top" alt="<?php echo htmlspecialchars($related_post['title']); ?>">
                                 <?php endif; ?>
@@ -126,9 +129,9 @@ $related_posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 </div>
                 <?php endif; ?>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-4 sidebar">
                 <!-- Sidebar -->
-                <div class="card">
+                <div class="card mb-4">
                     <div class="card-header">
                         Categories
                     </div>
@@ -139,9 +142,18 @@ $related_posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         foreach($categories as $category):
                         ?>
                             <a href="category.php?slug=<?php echo htmlspecialchars($category['slug']); ?>" class="d-block mb-2">
-                                <?php echo htmlspecialchars($category['name']); ?>
+                                <i class="fas fa-tag me-1"></i> <?php echo htmlspecialchars($category['name']); ?>
                             </a>
                         <?php endforeach; ?>
+                    </div>
+                </div>
+                <div class="card mb-4">
+                    <div class="card-header bg-success text-white">
+                        <i class="fas fa-info-circle me-1"></i> About This Site
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-2">CMS Sederhana adalah platform blog modern, responsif, dan mudah digunakan untuk berbagi informasi, berita, dan inspirasi bagi semua kalangan.</p>
+                        <p class="mb-0"><i class="fas fa-users me-1"></i> Untuk penulis, pembaca, dan komunitas!</p>
                     </div>
                 </div>
             </div>

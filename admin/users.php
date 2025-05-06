@@ -3,8 +3,8 @@ session_start();
 require_once '../config/database.php';
 
 // Check if user is logged in and is admin
-if(!isset($_SESSION['user_id']) || $_SESSION['role'] != 'admin') {
-    header("Location: ../login.php");
+if(!isset($_SESSION['user_id']) || $_SESSION['role'] == 'view') {
+    header("Location: ../index.php");
     exit();
 }
 
@@ -69,10 +69,11 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <title>Users - CMS Sederhana</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- AdminLTE CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
+    <!-- Custom CSS -->
+    <link href="../assets/css/style.css" rel="stylesheet">
+    <link href="../assets/css/admin-users.css" rel="stylesheet">
     <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="hold-transition sidebar-mini">
     <div class="wrapper">
@@ -101,7 +102,7 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <div class="sidebar">
                 <div class="user-panel mt-3 pb-3 mb-3 d-flex">
                     <div class="info">
-                        <a href="#" class="d-block"><?php echo htmlspecialchars($_SESSION['username']); ?></a>
+                        <a href="#" class="d-block"><?php echo htmlspecialchars($_SESSION['username']); ?> <span class="badge bg-info text-dark ms-2"><?php echo ucfirst($_SESSION['role']); ?></span></a>
                     </div>
                 </div>
 
@@ -142,12 +143,7 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <div class="container-fluid">
                     <div class="row mb-2">
                         <div class="col-sm-6">
-                            <h1 class="m-0">Users</h1>
-                        </div>
-                        <div class="col-sm-6">
-                            <button type="button" class="btn btn-primary float-right" data-toggle="modal" data-target="#userModal">
-                                <i class="fas fa-plus"></i> Add New User
-                            </button>
+                            <h1 class="m-0"><center> Users</h1>
                         </div>
                     </div>
                 </div>
@@ -156,10 +152,10 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <div class="content">
                 <div class="container-fluid">
                     <div class="card">
-                        <div class="card-body table-responsive p-0">
-                            <table class="table table-hover text-nowrap">
+                        <div class="card-body table-responsive p-0" style="padding: 2rem 2rem 1.5rem 2rem;">
+                            <table class="table table-hover align-middle" style="background: #fff; border-radius: 0.75rem;">
                                 <thead>
-                                    <tr>
+                                    <tr style="background: var(--gray-50); color: var(--dark-color); font-weight: 600;">
                                         <th>Username</th>
                                         <th>Email</th>
                                         <th>Full Name</th>
@@ -170,23 +166,23 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 <tbody>
                                     <?php foreach($users as $user): ?>
                                     <tr>
-                                        <td><?php echo htmlspecialchars($user['username']); ?></td>
-                                        <td><?php echo htmlspecialchars($user['email']); ?></td>
-                                        <td><?php echo htmlspecialchars($user['full_name']); ?></td>
+                                        <td style="font-weight: 500; color: var(--dark-color); font-size: 1.05rem;"><?php echo htmlspecialchars($user['username']); ?></td>
+                                        <td style="color: var(--gray-500);"> <?php echo htmlspecialchars($user['email']); ?> </td>
+                                        <td style="color: var(--gray-500);"> <?php echo htmlspecialchars($user['full_name']); ?> </td>
                                         <td>
-                                            <span class="badge badge-<?php echo $user['role'] == 'admin' ? 'danger' : ($user['role'] == 'editor' ? 'warning' : 'info'); ?>">
+                                            <span class="badge <?php echo $user['role'] == 'admin' ? 'bg-danger' : ($user['role'] == 'editor' ? 'bg-warning text-dark' : 'bg-info text-dark'); ?>" style="font-size: 0.95rem; padding: 0.4em 0.8em; border-radius: 0.5rem; font-weight: 500;">
                                                 <?php echo ucfirst($user['role']); ?>
                                             </span>
                                         </td>
                                         <td>
-                                            <button type="button" class="btn btn-sm btn-info" onclick="editUser(<?php echo htmlspecialchars(json_encode($user)); ?>)">
-                                                <i class="fas fa-edit"></i>
+                                            <button type="button" class="btn btn-sm btn-info" style="border-radius: 0.5rem; font-weight: 500; padding: 0.5rem 1.1rem;">
+                                                <i class="fas fa-edit"></i> Edit
                                             </button>
                                             <?php if($user['id'] != $_SESSION['user_id']): ?>
                                             <form action="" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this user?');">
                                                 <input type="hidden" name="user_id" value="<?php echo $user['id']; ?>">
-                                                <button type="submit" name="delete_user" class="btn btn-sm btn-danger">
-                                                    <i class="fas fa-trash"></i>
+                                                <button type="submit" name="delete_user" class="btn btn-sm btn-danger" style="border-radius: 0.5rem; font-weight: 500; padding: 0.5rem 1.1rem;">
+                                                    <i class="fas fa-trash"></i> Hapus
                                                 </button>
                                             </form>
                                             <?php endif; ?>
@@ -261,8 +257,6 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- AdminLTE JS -->
-    <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
     <script>
         function editUser(user) {
             document.getElementById('user_id').value = user.id;
