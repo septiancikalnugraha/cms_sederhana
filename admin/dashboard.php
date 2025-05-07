@@ -56,6 +56,11 @@ $recent_posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <i class="fas fa-sign-out-alt"></i> Logout
                     </a>
                 </li>
+                <li class="nav-item">
+                    <button id="toggleDarkMode" class="btn btn-outline-secondary ms-2" title="Toggle Dark/Light Mode">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                </li>
             </ul>
         </nav>
 
@@ -213,5 +218,56 @@ $recent_posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <!-- AdminLTE JS -->
     <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
+    <style>
+    body.dark-mode {
+        background: #18191a !important;
+        color: #e4e6eb !important;
+    }
+    body.dark-mode .card,
+    body.dark-mode .navbar,
+    body.dark-mode .sidebar,
+    body.dark-mode .main-content,
+    body.dark-mode .footer {
+        background: #242526 !important;
+        color: #e4e6eb !important;
+        border-color: #333 !important;
+    }
+    body.dark-mode .card-header,
+    body.dark-mode .card-footer {
+        background: #202124 !important;
+        color: #e4e6eb !important;
+    }
+    body.dark-mode .btn,
+    body.dark-mode .btn-primary,
+    body.dark-mode .btn-outline-primary {
+        background: #3a3b3c !important;
+        color: #e4e6eb !important;
+        border-color: #555 !important;
+    }
+    body.dark-mode .table {
+        background: #242526 !important;
+        color: #e4e6eb !important;
+    }
+    </style>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        if (localStorage.getItem('dashboardDarkMode') === 'true') {
+            document.body.classList.add('dark-mode');
+        }
+        const toggleBtn = document.getElementById('toggleDarkMode');
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', function() {
+                document.body.classList.toggle('dark-mode');
+                localStorage.setItem('dashboardDarkMode', document.body.classList.contains('dark-mode'));
+                toggleBtn.innerHTML = document.body.classList.contains('dark-mode')
+                    ? '<i class="fas fa-sun"></i>'
+                    : '<i class="fas fa-moon"></i>';
+            });
+            toggleBtn.innerHTML = document.body.classList.contains('dark-mode')
+                ? '<i class="fas fa-sun"></i>'
+                : '<i class="fas fa-moon"></i>';
+        }
+    });
+    </script>
 </body>
 </html> 

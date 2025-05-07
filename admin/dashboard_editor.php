@@ -661,6 +661,36 @@ $categories_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
             visibility: visible;
             opacity: 1;
         }
+
+        body.dark-mode {
+            background: #18191a !important;
+            color: #e4e6eb !important;
+        }
+        body.dark-mode .card,
+        body.dark-mode .navbar,
+        body.dark-mode .sidebar,
+        body.dark-mode .main-content,
+        body.dark-mode .footer {
+            background: #242526 !important;
+            color: #e4e6eb !important;
+            border-color: #333 !important;
+        }
+        body.dark-mode .card-header,
+        body.dark-mode .card-footer {
+            background: #202124 !important;
+            color: #e4e6eb !important;
+        }
+        body.dark-mode .btn,
+        body.dark-mode .btn-primary,
+        body.dark-mode .btn-outline-primary {
+            background: #3a3b3c !important;
+            color: #e4e6eb !important;
+            border-color: #555 !important;
+        }
+        body.dark-mode .table {
+            background: #242526 !important;
+            color: #e4e6eb !important;
+        }
     </style>
 </head>
 <body>
@@ -735,10 +765,9 @@ $categories_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 
                 <div class="header-title">Dashboard</div>
                 
-                <div class="header-actions">
-                    <button class="dark-mode-toggle tooltip-container" id="darkModeToggle">
+                <div class="d-flex align-items-center ms-auto">
+                    <button id="toggleDarkMode" class="btn btn-outline-secondary me-2" title="Toggle Dark/Light Mode">
                         <i class="fas fa-moon"></i>
-                        <span class="tooltip-content">Toggle Dark Mode</span>
                     </button>
                     
                     <a href="../index.php" class="header-link tooltip-container">
@@ -931,7 +960,7 @@ $categories_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
         });
         
         // Dark Mode Toggle
-        const darkModeToggle = document.getElementById('darkModeToggle');
+        const darkModeToggle = document.getElementById('toggleDarkMode');
         const htmlElement = document.documentElement;
         
         // Check if user has a preference saved
@@ -1094,6 +1123,25 @@ $categories_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
         } else {
             document.getElementById('categoriesChart').parentNode.innerHTML = '<div class="d-flex align-items-center justify-content-center h-100"><p class="text-muted">No category data available</p></div>';
         }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            if (localStorage.getItem('dashboardDarkMode') === 'true') {
+                document.body.classList.add('dark-mode');
+            }
+            const toggleBtn = document.getElementById('toggleDarkMode');
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', function() {
+                    document.body.classList.toggle('dark-mode');
+                    localStorage.setItem('dashboardDarkMode', document.body.classList.contains('dark-mode'));
+                    toggleBtn.innerHTML = document.body.classList.contains('dark-mode')
+                        ? '<i class="fas fa-sun"></i>'
+                        : '<i class="fas fa-moon"></i>';
+                });
+                toggleBtn.innerHTML = document.body.classList.contains('dark-mode')
+                    ? '<i class="fas fa-sun"></i>'
+                    : '<i class="fas fa-moon"></i>';
+            }
+        });
     </script>
 </body>
 </html>

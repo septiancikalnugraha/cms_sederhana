@@ -44,3 +44,5 @@ INSERT INTO categories (name, slug, description) VALUES
 ('Olahraga', 'olahraga', 'Kategori olahraga');
 
 SELECT username, role FROM users WHERE username = 'USERNAME_YANG_DICOBA'; 
+
+ALTER TABLE posts ADD COLUMN user_id INT AFTER id; 

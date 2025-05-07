@@ -15,6 +15,18 @@ $recent_articles = $stmt->fetchAll(PDO::FETCH_ASSOC);
 $stmt = $pdo->prepare("SELECT id, name FROM categories ORDER BY name ASC");
 $stmt->execute();
 $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Filter kategori jika ada parameter GET
+$selected_category_id = isset($_GET['category']) ? intval($_GET['category']) : null;
+if ($selected_category_id) {
+    $stmt = $pdo->prepare("SELECT id, title, created_at FROM posts WHERE category_id = ? ORDER BY created_at DESC LIMIT 5");
+    $stmt->execute([$selected_category_id]);
+    $recent_articles = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} else {
+    $stmt = $pdo->prepare("SELECT id, title, created_at FROM posts ORDER BY created_at DESC LIMIT 5");
+    $stmt->execute();
+    $recent_articles = $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -88,6 +100,9 @@ $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             <li><a class="dropdown-item" href="../logout.php"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
                         </ul>
                     </div>
+                    <button id="toggleDarkMode" class="btn btn-outline-secondary ms-2" title="Toggle Dark/Light Mode">
+                        <i class="fas fa-moon"></i>
+                    </button>
                 </div>
             </nav>
 
@@ -190,7 +205,7 @@ $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                     </div>
                                 </div>
                                 <div class="card-footer text-end" style="background: #f8fafc; border-radius: 0 0 1rem 1rem;">
-                                    <a href="../articles.php" class="btn btn-sm btn-outline-primary" style="border-radius: 0.5rem;">Lihat Semua</a>
+                                    <a href="dashboard_view.php" class="btn btn-sm btn-outline-primary" style="border-radius: 0.5rem;">Lihat Semua</a>
                                 </div>
                             </div>
                         </div>
@@ -209,7 +224,7 @@ $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                         <?php else: ?>
                                             <?php foreach ($categories as $category): ?>
                                                 <li>
-                                                    <a href="../categories.php?id=<?php echo $category['id']; ?>">
+                                                    <a href="dashboard_view.php?category=<?php echo $category['id']; ?>" class="<?php echo ($selected_category_id == $category['id']) ? 'text-primary fw-bold' : ''; ?>">
                                                         <i class="fas fa-angle-right me-2"></i> <?php echo htmlspecialchars($category['name']); ?>
                                                     </a>
                                                 </li>
@@ -272,6 +287,57 @@ $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 });
             }
         });
+    </script>
+    <style>
+    body.dark-mode {
+        background: #18191a !important;
+        color: #e4e6eb !important;
+    }
+    body.dark-mode .card,
+    body.dark-mode .navbar,
+    body.dark-mode .sidebar,
+    body.dark-mode .main-content,
+    body.dark-mode .footer {
+        background: #242526 !important;
+        color: #e4e6eb !important;
+        border-color: #333 !important;
+    }
+    body.dark-mode .card-header,
+    body.dark-mode .card-footer {
+        background: #202124 !important;
+        color: #e4e6eb !important;
+    }
+    body.dark-mode .btn,
+    body.dark-mode .btn-primary,
+    body.dark-mode .btn-outline-primary {
+        background: #3a3b3c !important;
+        color: #e4e6eb !important;
+        border-color: #555 !important;
+    }
+    body.dark-mode .table {
+        background: #242526 !important;
+        color: #e4e6eb !important;
+    }
+    </style>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        if (localStorage.getItem('dashboardDarkMode') === 'true') {
+            document.body.classList.add('dark-mode');
+        }
+        const toggleBtn = document.getElementById('toggleDarkMode');
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', function() {
+                document.body.classList.toggle('dark-mode');
+                localStorage.setItem('dashboardDarkMode', document.body.classList.contains('dark-mode'));
+                toggleBtn.innerHTML = document.body.classList.contains('dark-mode')
+                    ? '<i class="fas fa-sun"></i>'
+                    : '<i class="fas fa-moon"></i>';
+            });
+            toggleBtn.innerHTML = document.body.classList.contains('dark-mode')
+                ? '<i class="fas fa-sun"></i>'
+                : '<i class="fas fa-moon"></i>';
+        }
+    });
     </script>
 </body>
 </html>

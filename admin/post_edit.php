@@ -37,37 +37,49 @@ if ($post_id) {
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $title = $_POST['title'];
-    $content = $_POST['content'];
+    $slug = $_POST['slug'];
+    $content = str_replace(['../uploads/', 'uploads/'], '/cms_sederhana/uploads/', $_POST['content']);
     $category_id = $_POST['category_id'];
     $status = $_POST['status'];
     $user_id = $_SESSION['user_id'];
     
-    // Handle featured image upload
-    $featured_image = $post ? $post['featured_image'] : null;
-    if (isset($_FILES['featured_image']) && $_FILES['featured_image']['error'] === 0) {
-        $upload_dir = '../uploads/';
-        $file_extension = strtolower(pathinfo($_FILES['featured_image']['name'], PATHINFO_EXTENSION));
-        $file_name = uniqid() . '.' . $file_extension;
-        $target_file = $upload_dir . $file_name;
-        
-        if (move_uploaded_file($_FILES['featured_image']['tmp_name'], $target_file)) {
-            $featured_image = $file_name;
-        }
+    // Jika slug kosong, generate dari title
+    if (empty($slug)) {
+        $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $title), '-'));
     }
-    
-    if ($post_id) {
-        // Update existing post
-        $stmt = $pdo->prepare("UPDATE posts SET title = ?, content = ?, category_id = ?, featured_image = ?, status = ?, updated_at = NOW() WHERE id = ?");
-        $stmt->execute([$title, $content, $category_id, $featured_image, $status, $post_id]);
+    // Cek slug unik
+    $stmt = $pdo->prepare("SELECT id FROM posts WHERE slug = ? AND id != ?");
+    $stmt->execute([$slug, $post_id ? $post_id : 0]);
+    if ($stmt->fetch()) {
+        $error = "Slug sudah digunakan, silakan pilih slug lain.";
     } else {
-        // Create new post - FIXED THE SQL QUERY HERE
-        $stmt = $pdo->prepare("INSERT INTO posts (title, content, category_id, featured_image, status, user_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())");
-        $stmt->execute([$title, $content, $category_id, $featured_image, $status, $user_id]);
-        $post_id = $pdo->lastInsertId();
+        // Handle featured image upload
+        $featured_image = $post ? $post['featured_image'] : null;
+        if (isset($_FILES['featured_image']) && $_FILES['featured_image']['error'] === 0) {
+            $upload_dir = '../uploads/';
+            $file_extension = strtolower(pathinfo($_FILES['featured_image']['name'], PATHINFO_EXTENSION));
+            $file_name = uniqid() . '.' . $file_extension;
+            $target_file = $upload_dir . $file_name;
+            
+            if (move_uploaded_file($_FILES['featured_image']['tmp_name'], $target_file)) {
+                $featured_image = $file_name;
+            }
+        }
+        
+        if ($post_id) {
+            // Update existing post
+            $stmt = $pdo->prepare("UPDATE posts SET title = ?, slug = ?, content = ?, category_id = ?, featured_image = ?, status = ?, updated_at = NOW() WHERE id = ?");
+            $stmt->execute([$title, $slug, $content, $category_id, $featured_image, $status, $post_id]);
+        } else {
+            // Create new post
+            $stmt = $pdo->prepare("INSERT INTO posts (title, slug, content, category_id, featured_image, status, author_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
+            $stmt->execute([$title, $slug, $content, $category_id, $featured_image, $status, $user_id]);
+            $post_id = $pdo->lastInsertId();
+        }
+        
+        header("Location: posts.php");
+        exit();
     }
-    
-    header("Location: posts.php");
-    exit();
 }
 ?>
 
@@ -172,6 +184,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <label for="title">Title</label>
                                 <input type="text" class="form-control" id="title" name="title" required
                                     value="<?php echo $post ? htmlspecialchars($post['title']) : ''; ?>">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="slug">Slug</label>
+                                <input type="text" class="form-control" id="slug" name="slug"
+                                    value="<?php echo $post ? htmlspecialchars($post['slug']) : ''; ?>">
                             </div>
 
                             <div class="form-group">

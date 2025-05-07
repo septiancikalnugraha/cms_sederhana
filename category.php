@@ -70,6 +70,11 @@ $posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             <a class="nav-link" href="login.php">Login</a>
                         </li>
                     <?php endif; ?>
+                    <li class="nav-item">
+                        <button id="toggleDarkMode" class="btn btn-outline-secondary ms-2" title="Toggle Dark/Light Mode">
+                            <i class="fas fa-moon"></i>
+                        </button>
+                    </li>
                 </ul>
             </div>
         </div>
@@ -152,5 +157,83 @@ $posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+    body.dark-mode {
+        background: #18191a !important;
+        color: #e4e6eb !important;
+    }
+    body.dark-mode .card,
+    body.dark-mode .navbar,
+    body.dark-mode .sidebar,
+    body.dark-mode .main-content,
+    body.dark-mode .footer {
+        background: #242526 !important;
+        color: #e4e6eb !important;
+        border-color: #333 !important;
+    }
+    body.dark-mode .card-header,
+    body.dark-mode .card-footer {
+        background: #202124 !important;
+        color: #e4e6eb !important;
+    }
+    body.dark-mode .btn,
+    body.dark-mode .btn-primary,
+    body.dark-mode .btn-outline-primary {
+        background: #3a3b3c !important;
+        color: #e4e6eb !important;
+        border-color: #555 !important;
+    }
+    body.dark-mode .table {
+        background: #242526 !important;
+        color: #e4e6eb !important;
+    }
+    body.dark-mode .content {
+        background: #242526 !important;
+        color: #e4e6eb !important;
+    }
+    body.dark-mode .card-img-top,
+    body.dark-mode .post-content img {
+        background: #18191a !important;
+        border-color: #333 !important;
+    }
+    .post-content img,
+    .card-img-top,
+    .featured-img {
+        max-width: 100%;
+        height: auto;
+        display: block;
+        margin: 1.5rem auto;
+        background: #fff;
+        border-radius: 0.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    body.dark-mode .post-content img,
+    body.dark-mode .card-img-top,
+    body.dark-mode .featured-img {
+        background: #18191a !important;
+        border-color: #333 !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    </style>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        if (localStorage.getItem('dashboardDarkMode') === 'true') {
+            document.body.classList.add('dark-mode');
+        }
+        const toggleBtn = document.getElementById('toggleDarkMode');
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', function() {
+                document.body.classList.toggle('dark-mode');
+                localStorage.setItem('dashboardDarkMode', document.body.classList.contains('dark-mode'));
+                toggleBtn.innerHTML = document.body.classList.contains('dark-mode')
+                    ? '<i class="fas fa-sun"></i>'
+                    : '<i class="fas fa-moon"></i>';
+            });
+            toggleBtn.innerHTML = document.body.classList.contains('dark-mode')
+                ? '<i class="fas fa-sun"></i>'
+                : '<i class="fas fa-moon"></i>';
+        }
+    });
+    </script>
 </body>
 </html> 
