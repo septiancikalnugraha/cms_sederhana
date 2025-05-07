@@ -23,22 +23,27 @@ if (!$post) {
     <link href="assets/css/article-detail.css" rel="stylesheet">
 </head>
 <body>
-    <div class="container py-5">
-        <div class="row justify-content-center">
-            <div class="col-lg-8">
-                <div class="card shadow-lg mb-4">
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
                     <div class="card-body">
-                        <h1 class="article-title mb-3"><?php echo htmlspecialchars($post['title']); ?></h1>
-                        <div class="article-meta mb-4">
-                            <span class="badge bg-primary me-2"><i class="fas fa-folder"></i> <?php echo htmlspecialchars($post['category_name']); ?></span>
-                            <span class="text-muted"><i class="fas fa-calendar-alt"></i> <?php echo date('d M Y', strtotime($post['created_at'])); ?></span>
+                        <a href="admin/dashboard_view.php" class="btn btn-primary mb-3">
+                            <i class="fas fa-arrow-left"></i> Back to Dashboard
+                        </a>
+                        <h1 class="card-title"><?php echo htmlspecialchars($post['title']); ?></h1>
+                        <div class="post-meta mb-3">
+                            <span><i class="fas fa-folder"></i> <?php echo htmlspecialchars($post['category_name']); ?></span>
+                            <span><i class="fas fa-calendar"></i> <?php echo date('F j, Y', strtotime($post['created_at'])); ?></span>
                         </div>
-                        <div class="article-content mb-4" style="white-space: pre-line;">
-                            <?php echo nl2br(htmlspecialchars($post['content'])); ?>
+                        <div class="post-content">
+                            <?php echo $post['content']; ?>
                         </div>
-                        <a href="admin/dashboard_view.php" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Kembali ke Dashboard</a>
                     </div>
                 </div>
+            </div>
+            <div class="col-md-4">
+                <!-- Sidebar content -->
             </div>
         </div>
     </div>

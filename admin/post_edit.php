@@ -60,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $pdo->prepare("UPDATE posts SET title = ?, content = ?, category_id = ?, featured_image = ?, status = ?, updated_at = NOW() WHERE id = ?");
         $stmt->execute([$title, $content, $category_id, $featured_image, $status, $post_id]);
     } else {
-        // Create new post
+        // Create new post - FIXED THE SQL QUERY HERE
         $stmt = $pdo->prepare("INSERT INTO posts (title, content, category_id, featured_image, status, user_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())");
         $stmt->execute([$title, $content, $category_id, $featured_image, $status, $user_id]);
         $post_id = $pdo->lastInsertId();
@@ -242,4 +242,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         });
     </script>
 </body>
-</html> 
+</html>

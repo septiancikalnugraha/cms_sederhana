@@ -97,7 +97,6 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
                             <option value="">Pilih Role</option>
                             <option value="admin">Admin</option>
                             <option value="editor">Editor</option>
-                            <option value="author">Author</option>
                             <option value="view">View</option>
                         </select>
                     </div>

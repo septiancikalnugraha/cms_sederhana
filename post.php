@@ -10,10 +10,9 @@ if(!isset($_GET['slug'])) {
 $slug = $_GET['slug'];
 
 // Get post data
-$stmt = $pdo->prepare("SELECT p.*, c.name as category_name, u.full_name as author_name 
+$stmt = $pdo->prepare("SELECT p.*, c.name as category_name 
                        FROM posts p 
                        LEFT JOIN categories c ON p.category_id = c.id 
-                       LEFT JOIN users u ON p.author_id = u.id 
                        WHERE p.slug = ? AND p.status = 'published'");
 $stmt->execute([$slug]);
 $post = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -24,10 +23,9 @@ if(!$post) {
 }
 
 // Get related posts
-$stmt = $pdo->prepare("SELECT p.*, c.name as category_name, u.full_name as author_name 
+$stmt = $pdo->prepare("SELECT p.*, c.name as category_name 
                        FROM posts p 
                        LEFT JOIN categories c ON p.category_id = c.id 
-                       LEFT JOIN users u ON p.author_id = u.id 
                        WHERE p.category_id = ? AND p.id != ? AND p.status = 'published' 
                        ORDER BY p.created_at DESC LIMIT 3");
 $stmt->execute([$post['category_id'], $post['id']]);
@@ -87,7 +85,6 @@ $related_posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <article>
                     <h1 class="mb-3"><?php echo htmlspecialchars($post['title']); ?></h1>
                     <div class="meta mb-3">
-                        <span class="badge bg-primary"><i class="fas fa-user"></i> <?php echo htmlspecialchars($post['author_name']); ?></span>
                         <span class="badge bg-success"><i class="fas fa-folder"></i> <?php echo htmlspecialchars($post['category_name']); ?></span>
                         <span class="ms-2"><i class="fas fa-calendar-alt"></i> <?php echo date('F j, Y', strtotime($post['created_at'])); ?></span>
                     </div>
@@ -118,7 +115,6 @@ $related_posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                         </a>
                                     </h5>
                                     <p class="card-text text-muted">
-                                        By <?php echo htmlspecialchars($related_post['author_name']); ?> | 
                                         <?php echo date('M d, Y', strtotime($related_post['created_at'])); ?>
                                     </p>
                                 </div>

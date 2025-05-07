@@ -73,7 +73,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <div class="mb-3">
                         <select class="form-control" name="role" required>
                             <option value="">Pilih Role</option>
-                            <option value="author">Author</option>
                             <option value="editor">Editor</option>
                             <option value="view">View</option>
                         </select>

@@ -105,9 +105,6 @@ $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                             Anda login sebagai <b>View</b>. Dengan akses ini, Anda dapat membaca semua artikel yang tersedia di sistem. 
                                             Jika membutuhkan akses untuk mengedit atau membuat konten, silakan hubungi administrator.
                                         </p>
-                                        <a href="../index.php" class="btn btn-primary mt-2">
-                                            <i class="fas fa-home me-1"></i> Lihat Artikel
-                                        </a>
                                     </div>
                                     <div class="col-md-4 d-none d-md-block text-end">
                                         <i class="fas fa-user-shield welcome-icon"></i>

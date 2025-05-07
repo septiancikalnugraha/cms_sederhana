@@ -20,10 +20,9 @@ if(!$category) {
 }
 
 // Get posts in this category
-$stmt = $pdo->prepare("SELECT p.*, c.name as category_name, u.full_name as author_name 
+$stmt = $pdo->prepare("SELECT p.*, c.name as category_name 
                        FROM posts p 
                        LEFT JOIN categories c ON p.category_id = c.id 
-                       LEFT JOIN users u ON p.author_id = u.id 
                        WHERE p.category_id = ? AND p.status = 'published' 
                        ORDER BY p.created_at DESC");
 $stmt->execute([$category['id']]);
@@ -98,7 +97,6 @@ $posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                     </a>
                                 </h2>
                                 <div class="meta mb-2">
-                                    <span class="badge bg-primary"><i class="fas fa-user"></i> <?php echo htmlspecialchars($post['author_name']); ?></span>
                                     <span class="ms-2"><i class="fas fa-calendar-alt"></i> <?php echo date('F j, Y', strtotime($post['created_at'])); ?></span>
                                 </div>
                                 <p class="card-text">

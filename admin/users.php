@@ -143,7 +143,7 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <div class="container-fluid">
                     <div class="row mb-2">
                         <div class="col-sm-6">
-                            <h1 class="m-0"><center> Users</h1>
+                            <h1 class="m-0"> Users</h1>
                         </div>
                     </div>
                 </div>
@@ -230,7 +230,6 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             <div class="form-group">
                                 <label for="role">Role</label>
                                 <select class="form-control" id="role" name="role" required>
-                                    <option value="author">Author</option>
                                     <option value="editor">Editor</option>
                                     <option value="admin">Admin</option>
                                 </select>
@@ -276,7 +275,7 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
             document.getElementById('email').value = '';
             document.getElementById('full_name').value = '';
             document.getElementById('password').value = '';
-            document.getElementById('role').value = 'author';
+            document.getElementById('role').value = 'editor';
             document.getElementById('userModalLabel').textContent = 'Add New User';
         });
     </script>

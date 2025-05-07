@@ -172,7 +172,6 @@ $recent_posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                             <tr>
                                                 <th>Title</th>
                                                 <th>Category</th>
-                                                <th>Author</th>
                                                 <th>Status</th>
                                                 <th>Date</th>
                                             </tr>
@@ -182,7 +181,6 @@ $recent_posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                             <tr>
                                                 <td><?php echo htmlspecialchars($post['title']); ?></td>
                                                 <td><?php echo htmlspecialchars($post['category_name']); ?></td>
-                                                <td><?php echo htmlspecialchars($post['author_name']); ?></td>
                                                 <td>
                                                     <span class="badge badge-<?php echo $post['status'] == 'published' ? 'success' : 'warning'; ?>">
                                                         <?php echo ucfirst($post['status']); ?>

@@ -43,7 +43,6 @@ $posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     </li>
                     <?php if(isset($_SESSION['user_id'])): ?>
                         <li class="nav-item">
-                            <a class="nav-link" href="admin/dashboard.php">Dashboard</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="logout.php">Logout</a>
