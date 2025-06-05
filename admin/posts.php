@@ -8,22 +8,64 @@ if(!isset($_SESSION['user_id']) || $_SESSION['role'] == 'view') {
     exit();
 }
 
-// Handle post deletion
-if(isset($_POST['delete_post'])) {
-    $post_id = $_POST['post_id'];
-    $stmt = $pdo->prepare("DELETE FROM posts WHERE id = ?");
-    $stmt->execute([$post_id]);
-    header("Location: posts.php");
-    exit();
+// Inisialisasi koneksi database
+$database = new Database();
+$pdo = $database->getConnection();
+
+$posts = []; // Initialize posts as an empty array
+$error = ''; // Initialize error variable
+
+// Lanjutkan hanya jika koneksi database berhasil
+if ($pdo) {
+    // Handle post deletion
+    if(isset($_POST['delete_post'])) {
+        $post_id = $_POST['post_id'];
+        
+        // Periksa apakah pengguna adalah admin atau pemilik post (jika perlu)
+        // Misalnya, ambil author_id post dan bandingkan dengan user_id di session
+        $stmt_check_author = $pdo->prepare("SELECT author_id FROM posts WHERE id = ?");
+        $stmt_check_author->execute([$post_id]);
+        $post_to_delete = $stmt_check_author->fetch(PDO::FETCH_ASSOC);
+
+        if ($post_to_delete && ($_SESSION['role'] == 'admin' || ($post_to_delete['author_id'] == $_SESSION['user_id'] && $_SESSION['role'] == 'editor'))) {
+            $stmt = $pdo->prepare("DELETE FROM posts WHERE id = ?");
+            $stmt->execute([$post_id]);
+            // Redirect setelah berhasil delete
+            header("Location: posts.php");
+            exit();
+        } else if ($post_to_delete) {
+            // Jika bukan admin dan bukan pemilik post (untuk editor)
+            $error = "Anda tidak memiliki izin untuk menghapus post ini.";
+        } else {
+             // Jika post tidak ditemukan
+             $error = "Post tidak ditemukan.";
+        }
+    }
+
+    // Get all posts with category and author information
+    // Modify query for editor to see only their posts, unless admin
+    $sql = "SELECT p.*, c.name as category_name, u.username as author_name 
+            FROM posts p 
+            LEFT JOIN categories c ON p.category_id = c.id 
+            LEFT JOIN users u ON p.author_id = u.id";
+    
+    $params = [];
+    if ($_SESSION['role'] == 'editor') {
+        $sql .= " WHERE p.author_id = ?";
+        $params[] = $_SESSION['user_id'];
+    }
+
+    $sql .= " ORDER BY p.created_at DESC";
+
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
+    $posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+} else {
+    // Handle error koneksi database
+    $error = "Koneksi database gagal. Daftar post tidak tersedia.";
 }
 
-// Get all posts with category and author information
-$stmt = $pdo->query("SELECT p.*, c.name as category_name, u.username as author_name 
-                     FROM posts p 
-                     LEFT JOIN categories c ON p.category_id = c.id 
-                     LEFT JOIN users u ON p.author_id = u.id 
-                     ORDER BY p.created_at DESC");
-$posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <!DOCTYPE html>
@@ -113,9 +155,11 @@ $posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             <h1 class="m-0">Posts</h1>
                         </div>
                         <div class="col-sm-6">
+                            <?php if($_SESSION['role'] != 'view'): // Hanya Editor dan Admin yang bisa menambah post ?>
                             <a href="post_edit.php" class="btn btn-primary float-right">
                                 <i class="fas fa-plus"></i> Add New Post
                             </a>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
@@ -123,6 +167,10 @@ $posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             <div class="content">
                 <div class="container-fluid">
+                    <?php if($error): ?>
+                        <div class="alert alert-danger"><?php echo $error; ?></div>
+                    <?php endif; ?>
+
                     <div class="card">
                         <div class="card-body table-responsive p-0">
                             <table class="table table-hover text-nowrap">
@@ -133,10 +181,17 @@ $posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                         <th>Author</th>
                                         <th>Status</th>
                                         <th>Date</th>
+                                        <?php if($_SESSION['role'] != 'view'): // Hanya Editor dan Admin yang bisa melihat/melakukan aksi edit/delete ?>
                                         <th>Actions</th>
+                                        <?php endif; ?>
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    <?php if (empty($posts)): ?>
+                                    <tr>
+                                        <td colspan="<?php echo ($_SESSION['role'] != 'view') ? 6 : 5; // Sesuaikan colspan berdasarkan role ?>" class="text-center">Belum ada post</td>
+                                    </tr>
+                                    <?php else: ?>
                                     <?php foreach($posts as $post): ?>
                                     <tr>
                                         <td><?php echo htmlspecialchars($post['title']); ?></td>
@@ -148,19 +203,24 @@ $posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                             </span>
                                         </td>
                                         <td><?php echo date('M d, Y', strtotime($post['created_at'])); ?></td>
+                                        <?php if($_SESSION['role'] != 'view'): // Hanya Editor dan Admin yang bisa melihat/melakukan aksi edit/delete ?>
                                         <td>
                                             <a href="post_edit.php?id=<?php echo $post['id']; ?>" class="btn btn-sm btn-info">
                                                 <i class="fas fa-edit"></i>
                                             </a>
+                                            <?php if($_SESSION['role'] == 'admin' || ($post['author_id'] == $_SESSION['user_id'] && $_SESSION['role'] == 'editor')): // Hanya Admin atau pemilik post (Editor) yang bisa delete ?>
                                             <form action="" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this post?');">
                                                 <input type="hidden" name="post_id" value="<?php echo $post['id']; ?>">
                                                 <button type="submit" name="delete_post" class="btn btn-sm btn-danger">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
                                             </form>
+                                            <?php endif; ?>
                                         </td>
+                                        <?php endif; ?>
                                     </tr>
                                     <?php endforeach; ?>
+                                    <?php endif; ?>
                                 </tbody>
                             </table>
                         </div>

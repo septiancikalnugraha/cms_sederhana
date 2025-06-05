@@ -8,6 +8,90 @@ if(!isset($_SESSION['user_id']) || $_SESSION['role'] == 'view') {
     exit();
 }
 
+// Inisialisasi koneksi database
+$database = new Database();
+$pdo = $database->getConnection();
+
+$categories = []; // Initialize categories as an empty array
+$error = ''; // Initialize error variable
+
+// Lanjutkan hanya jika koneksi database berhasil
+if ($pdo) {
+
+    // Handle category deletion
+    if(isset($_POST['delete_category'])) {
+        $category_id = $_POST['category_id'];
+        
+        // Periksa apakah pengguna adalah admin sebelum menghapus (jika editor tidak boleh menghapus kategori)
+        if ($_SESSION['role'] == 'admin') {
+            // Optional: Periksa apakah ada post yang terkait dengan kategori ini sebelum menghapus
+            $stmt_check_posts = $pdo->prepare("SELECT COUNT(*) FROM posts WHERE category_id = ?");
+            $stmt_check_posts->execute([$category_id]);
+            $post_count = $stmt_check_posts->fetchColumn();
+            
+            if ($post_count > 0) {
+                $error = "Tidak dapat menghapus kategori karena masih ada post yang terkait.";
+            } else {
+                 $stmt = $pdo->prepare("DELETE FROM categories WHERE id = ?");
+                 $stmt->execute([$category_id]);
+                 // Redirect setelah berhasil delete
+                 header("Location: categories.php");
+                 exit();
+            }
+        } else {
+            $error = "Anda tidak memiliki izin untuk menghapus kategori.";
+        }
+    }
+
+    // Handle category creation/update
+    if($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['name'])) {
+        // Pastikan ini bukan permintaan delete
+        if (!isset($_POST['delete_category'])) {
+            $name = trim($_POST['name']);
+            $description = trim($_POST['description']);
+            // Generate slug from name, handle potential duplicates or special characters
+            $slug = strtolower(preg_replace('/[^a-z0-9-]/', '-', preg_replace('/-+/', '-', str_replace(' ', '-', $name))));
+            // Remove leading/trailing hyphens
+            $slug = trim($slug, '-');
+
+            if (empty($name)) {
+                $error = "Nama kategori tidak boleh kosong.";
+            } else {
+                 if(isset($_POST['id']) && !empty($_POST['id'])) {
+                     // Update existing category
+                     $category_id = $_POST['id'];
+                     // Optional: Check for duplicate slug (excluding current category)
+                     $stmt_check_slug = $pdo->prepare("SELECT COUNT(*) FROM categories WHERE slug = ? AND id != ?");
+                     $stmt_check_slug->execute([$slug, $category_id]);
+                     if ($stmt_check_slug->fetchColumn() > 0) {
+                         $error = "Slug kategori sudah ada.";
+                     } else {
+                         $stmt = $pdo->prepare("UPDATE categories SET name = ?, description = ?, slug = ? WHERE id = ?");
+                         $stmt->execute([$name, $description, $slug, $category_id]);
+                         // Redirect setelah berhasil update
+                         header("Location: categories.php");
+                         exit();
+                     }
+                 } else {
+                     // Create new category
+                      // Check for duplicate slug
+                     $stmt_check_slug = $pdo->prepare("SELECT COUNT(*) FROM categories WHERE slug = ?");
+                     $stmt_check_slug->execute([$slug]);
+                     if ($stmt_check_slug->fetchColumn() > 0) {
+                         $error = "Slug kategori sudah ada.";
+                     } else {
+                         $stmt = $pdo->prepare("INSERT INTO categories (name, description, slug) VALUES (?, ?, ?)");
+                         $stmt->execute([$name, $description, $slug]);
+                         // Redirect setelah berhasil create
+                         header("Location: categories.php");
+                         exit();
+                     }
+                 }
+            }
+        }
+    }
+
+    // Get all categories (and count posts for each)
 // Handle category deletion
 if(isset($_POST['delete_category'])) {
     $category_id = $_POST['category_id'];
@@ -44,6 +128,10 @@ $stmt = $pdo->query("SELECT c.*, COUNT(p.id) as post_count
                      GROUP BY c.id 
                      ORDER BY c.name");
 $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} else {
+    // Handle error koneksi database
+    $error = "Koneksi database gagal. Daftar kategori tidak tersedia.";
+}
 ?>
 
 <!DOCTYPE html>

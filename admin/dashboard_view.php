@@ -6,26 +6,37 @@ if(!isset($_SESSION['user_id']) || $_SESSION['role'] != 'view') {
     exit();
 }
 
-// Fetch some recent articles for preview
-$stmt = $pdo->prepare("SELECT id, title, created_at FROM posts ORDER BY created_at DESC LIMIT 5");
-$stmt->execute();
-$recent_articles = $stmt->fetchAll(PDO::FETCH_ASSOC);
+// Inisialisasi koneksi database
+$database = new Database();
+$pdo = $database->getConnection();
 
-// Fetch categories
-$stmt = $pdo->prepare("SELECT id, name FROM categories ORDER BY name ASC");
-$stmt->execute();
-$categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-// Filter kategori jika ada parameter GET
-$selected_category_id = isset($_GET['category']) ? intval($_GET['category']) : null;
-if ($selected_category_id) {
-    $stmt = $pdo->prepare("SELECT id, title, created_at FROM posts WHERE category_id = ? ORDER BY created_at DESC LIMIT 5");
-    $stmt->execute([$selected_category_id]);
-    $recent_articles = $stmt->fetchAll(PDO::FETCH_ASSOC);
-} else {
+if($pdo) {
+    // Fetch some recent articles for preview
     $stmt = $pdo->prepare("SELECT id, title, created_at FROM posts ORDER BY created_at DESC LIMIT 5");
     $stmt->execute();
     $recent_articles = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Fetch categories
+    $stmt = $pdo->prepare("SELECT id, name FROM categories ORDER BY name ASC");
+    $stmt->execute();
+    $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Filter kategori jika ada parameter GET
+    $selected_category_id = isset($_GET['category']) ? intval($_GET['category']) : null;
+    if ($selected_category_id) {
+        $stmt = $pdo->prepare("SELECT id, title, created_at FROM posts WHERE category_id = ? ORDER BY created_at DESC LIMIT 5");
+        $stmt->execute([$selected_category_id]);
+        $recent_articles = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } else {
+        $stmt = $pdo->prepare("SELECT id, title, created_at FROM posts ORDER BY created_at DESC LIMIT 5");
+        $stmt->execute();
+        $recent_articles = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+} else {
+    // Handle error koneksi database
+    $error = 'Koneksi database gagal.';
+    $recent_articles = [];
+    $categories = [];
 }
 ?>
 <!DOCTYPE html>

@@ -4,12 +4,23 @@ if (!isset($_GET['id'])) {
     header("Location: index.php");
     exit();
 }
-$id = $_GET['id'];
-$stmt = $pdo->prepare("SELECT p.*, c.name as category_name FROM posts p LEFT JOIN categories c ON p.category_id = c.id WHERE p.id = ?");
-$stmt->execute([$id]);
-$post = $stmt->fetch(PDO::FETCH_ASSOC);
-if (!$post) {
-    echo "<div style='padding:2rem;text-align:center;'>Artikel tidak ditemukan.<br><a href='index.php'>Kembali</a></div>";
+
+// Inisialisasi koneksi database
+$database = new Database();
+$pdo = $database->getConnection();
+
+if($pdo) {
+    $id = $_GET['id'];
+    $stmt = $pdo->prepare("SELECT p.*, c.name as category_name FROM posts p LEFT JOIN categories c ON p.category_id = c.id WHERE p.id = ?");
+    $stmt->execute([$id]);
+    $post = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if (!$post) {
+        echo "<div style='padding:2rem;text-align:center;'>Artikel tidak ditemukan.<br><a href='index.php'>Kembali</a></div>";
+        exit();
+    }
+} else {
+    echo "<div style='padding:2rem;text-align:center;'>Koneksi database gagal.<br><a href='index.php'>Kembali</a></div>";
     exit();
 }
 ?>

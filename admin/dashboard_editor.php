@@ -6,28 +6,43 @@ if(!isset($_SESSION['user_id']) || $_SESSION['role'] != 'editor') {
     exit();
 }
 
-// Get statistics
-$stmt = $pdo->query("SELECT COUNT(*) as total_posts FROM posts");
-$total_posts = $stmt->fetch()['total_posts'];
+// Inisialisasi koneksi database
+$database = new Database();
+$pdo = $database->getConnection();
 
-$stmt = $pdo->query("SELECT COUNT(*) as total_categories FROM categories");
-$total_categories = $stmt->fetch()['total_categories'];
+$total_posts = 0;
+$total_categories = 0;
+$recent_posts = [];
+$categories_data = [];
+$error = '';
 
-// Get recent posts
-$stmt = $pdo->query("SELECT p.*, c.name as category_name 
-                     FROM posts p 
-                     LEFT JOIN categories c ON p.category_id = c.id 
-                     ORDER BY p.created_at DESC LIMIT 5");
-$recent_posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
+// Lanjutkan hanya jika koneksi database berhasil
+if ($pdo) {
+    // Get statistics
+    $stmt = $pdo->query("SELECT COUNT(*) as total_posts FROM posts");
+    $total_posts = $stmt->fetch()['total_posts'];
 
-// Get categories for chart data
-$stmt = $pdo->query("SELECT c.name, COUNT(p.id) as post_count 
-                     FROM categories c 
-                     LEFT JOIN posts p ON c.id = p.category_id 
-                     GROUP BY c.id 
-                     ORDER BY post_count DESC 
-                     LIMIT 5");
-$categories_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $stmt = $pdo->query("SELECT COUNT(*) as total_categories FROM categories");
+    $total_categories = $stmt->fetch()['total_categories'];
+
+    // Get recent posts
+    $stmt = $pdo->query("SELECT p.*, c.name as category_name 
+                         FROM posts p 
+                         LEFT JOIN categories c ON p.category_id = c.id 
+                         ORDER BY p.created_at DESC LIMIT 5");
+    $recent_posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Get categories for chart data
+    $stmt = $pdo->query("SELECT c.name, COUNT(p.id) as post_count 
+                         FROM categories c 
+                         LEFT JOIN posts p ON c.id = p.category_id 
+                         GROUP BY c.id 
+                         ORDER BY post_count DESC 
+                         LIMIT 5");
+    $categories_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} else {
+    $error = "Koneksi database gagal. Statistik tidak tersedia.";
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">

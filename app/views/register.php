@@ -1,44 +1,3 @@
-<?php
-require_once 'config/database.php';
-
-$error = '';
-$success = '';
-
-// Inisialisasi koneksi database
-$database = new Database();
-$pdo = $database->getConnection();
-
-// Tambahkan pengecekan koneksi sebelum memproses POST request
-if ($pdo) {
-    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-        $username = trim($_POST['username']);
-        $email = trim($_POST['email']);
-        $full_name = trim($_POST['full_name']);
-        $password = $_POST['password'];
-        $role = strtolower($_POST['role']);
-
-        // Validasi sederhana
-        if (!$username || !$email || !$full_name || !$password || !$role) {
-            $error = 'Semua field harus diisi!';
-        } else {
-            // Cek username/email sudah ada
-            $stmt = $pdo->prepare("SELECT * FROM users WHERE username = ? OR email = ?");
-            $stmt->execute([$username, $email]);
-            if ($stmt->fetch()) {
-                $error = 'Username atau email sudah terdaftar!';
-            } else {
-                $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-                $stmt = $pdo->prepare("INSERT INTO users (username, password, email, full_name, role) VALUES (?, ?, ?, ?, ?)");
-                $stmt->execute([$username, $hashed_password, $email, $full_name, $role]);
-                $success = 'Registrasi berhasil! Silakan login.';
-            }
-        }
-    }
-} else {
-    // Pesan error jika koneksi database gagal
-    $error = 'Gagal terhubung ke database.';
-}
-?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -87,10 +46,10 @@ if ($pdo) {
             </div>
             <div class="card-body">
                 <h5 class="text-center mb-3">Register a new account</h5>
-                <?php if($error): ?>
+                <?php if(isset($error) && $error): ?>
                     <div class="alert alert-danger"><?php echo $error; ?></div>
                 <?php endif; ?>
-                <?php if($success): ?>
+                <?php if(isset($success) && $success): ?>
                     <div class="alert alert-success"><?php echo $success; ?></div>
                 <?php endif; ?>
                 <form action="register.php" method="post">

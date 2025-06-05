@@ -14,37 +14,45 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
     $password = $_POST['password'];
     $role = $_POST['role'];
 
-    $stmt = $pdo->prepare("SELECT * FROM users WHERE username = ?");
-    $stmt->execute([$username]);
-    $user = $stmt->fetch();
+    // Inisialisasi koneksi database
+    $database = new Database();
+    $pdo = $database->getConnection();
 
-    if($user) {
-        if(password_verify($password, $user['password'])) {
-            // Debug: tampilkan role di database dan role yang dipilih
-            echo "<div style='background:#fff;padding:10px;border:1px solid #ccc;margin-bottom:10px;'>";
-            echo "Role di database: <b>" . htmlspecialchars($user['role']) . "</b><br>";
-            echo "Role yang dipilih: <b>" . htmlspecialchars($role) . "</b><br>";
-            echo "</div>";
-            if(strtolower($user['role']) === strtolower($role)) {
-                $_SESSION['user_id'] = $user['id'];
-                $_SESSION['username'] = $user['username'];
-                $_SESSION['role'] = $user['role'];
-                if (strtolower($user['role']) === 'view') {
-                    header("Location: admin/dashboard_view.php");
-                } elseif (strtolower($user['role']) === 'editor') {
-                    header("Location: admin/dashboard_editor.php");
+    if($pdo) {
+        $stmt = $pdo->prepare("SELECT * FROM users WHERE username = ?");
+        $stmt->execute([$username]);
+        $user = $stmt->fetch();
+
+        if($user) {
+            if(password_verify($password, $user['password'])) {
+                // Debug: tampilkan role di database dan role yang dipilih
+                echo "<div style='background:#fff;padding:10px;border:1px solid #ccc;margin-bottom:10px;'>";
+                echo "Role di database: <b>" . htmlspecialchars($user['role']) . "</b><br>";
+                echo "Role yang dipilih: <b>" . htmlspecialchars($role) . "</b><br>";
+                echo "</div>";
+                if(strtolower($user['role']) === strtolower($role)) {
+                    $_SESSION['user_id'] = $user['id'];
+                    $_SESSION['username'] = $user['username'];
+                    $_SESSION['role'] = $user['role'];
+                    if (strtolower($user['role']) === 'view') {
+                        header("Location: admin/dashboard_view.php");
+                    } elseif (strtolower($user['role']) === 'editor') {
+                        header("Location: admin/dashboard_editor.php");
+                    } else {
+                        header("Location: admin/dashboard.php");
+                    }
+                    exit();
                 } else {
-                    header("Location: admin/dashboard.php");
+                    $error = 'Role yang dipilih tidak sesuai.';
                 }
-                exit();
             } else {
-                $error = 'Role yang dipilih tidak sesuai.';
+                $error = 'Password salah.';
             }
         } else {
-            $error = 'Password salah.';
+            $error = 'Username tidak ditemukan.';
         }
     } else {
-        $error = 'Username tidak ditemukan.';
+        $error = 'Koneksi database gagal.';
     }
 }
 ?>

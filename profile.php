@@ -7,52 +7,66 @@ if(!isset($_SESSION['user_id'])) {
     exit();
 }
 
-// Get user data
-$stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
-$stmt->execute([$_SESSION['user_id']]);
-$user = $stmt->fetch(PDO::FETCH_ASSOC);
+// Inisialisasi koneksi database
+$database = new Database();
+$pdo = $database->getConnection();
 
-// Handle profile update
-$message = '';
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $full_name = $_POST['full_name'];
-    $email = $_POST['email'];
-    $current_password = $_POST['current_password'];
-    $new_password = $_POST['new_password'];
-    $confirm_password = $_POST['confirm_password'];
-
-    // Verify current password
-    if (!empty($current_password)) {
-        if (password_verify($current_password, $user['password'])) {
-            if (!empty($new_password)) {
-                if ($new_password === $confirm_password) {
-                    // Update with new password
-                    $stmt = $pdo->prepare("UPDATE users SET full_name = ?, email = ?, password = ? WHERE id = ?");
-                    $stmt->execute([$full_name, $email, password_hash($new_password, PASSWORD_DEFAULT), $_SESSION['user_id']]);
-                    $message = '<div class="alert alert-success">Profil berhasil diperbarui!</div>';
-                } else {
-                    $message = '<div class="alert alert-danger">Password baru tidak cocok!</div>';
-                }
-            } else {
-                // Update without changing password
-                $stmt = $pdo->prepare("UPDATE users SET full_name = ?, email = ? WHERE id = ?");
-                $stmt->execute([$full_name, $email, $_SESSION['user_id']]);
-                $message = '<div class="alert alert-success">Profil berhasil diperbarui!</div>';
-            }
-        } else {
-            $message = '<div class="alert alert-danger">Password saat ini tidak valid!</div>';
-        }
-    } else {
-        // Update without changing password
-        $stmt = $pdo->prepare("UPDATE users SET full_name = ?, email = ? WHERE id = ?");
-        $stmt->execute([$full_name, $email, $_SESSION['user_id']]);
-        $message = '<div class="alert alert-success">Profil berhasil diperbarui!</div>';
-    }
-
-    // Refresh user data
+if($pdo) {
+    // Get user data
     $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
     $stmt->execute([$_SESSION['user_id']]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    // Handle profile update
+    $message = '';
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $full_name = $_POST['full_name'];
+        $email = $_POST['email'];
+        $current_password = $_POST['current_password'];
+        $new_password = $_POST['new_password'];
+        $confirm_password = $_POST['confirm_password'];
+
+        // Verify current password
+        if (!empty($current_password)) {
+            if (password_verify($current_password, $user['password'])) {
+                if (!empty($new_password)) {
+                    if ($new_password === $confirm_password) {
+                        // Update with new password
+                        $stmt = $pdo->prepare("UPDATE users SET full_name = ?, email = ?, password = ? WHERE id = ?");
+                        $stmt->execute([$full_name, $email, password_hash($new_password, PASSWORD_DEFAULT), $_SESSION['user_id']]);
+                        $message = '<div class="alert alert-success">Profil berhasil diperbarui!</div>';
+                    } else {
+                        $message = '<div class="alert alert-danger">Password baru tidak cocok!</div>';
+                    }
+                } else {
+                    // Update without changing password
+                    $stmt = $pdo->prepare("UPDATE users SET full_name = ?, email = ? WHERE id = ?");
+                    $stmt->execute([$full_name, $email, $_SESSION['user_id']]);
+                    $message = '<div class="alert alert-success">Profil berhasil diperbarui!</div>';
+                }
+            } else {
+                $message = '<div class="alert alert-danger">Password saat ini tidak valid!</div>';
+            }
+        } else {
+            // Update without changing password
+            $stmt = $pdo->prepare("UPDATE users SET full_name = ?, email = ? WHERE id = ?");
+            $stmt->execute([$full_name, $email, $_SESSION['user_id']]);
+            $message = '<div class="alert alert-success">Profil berhasil diperbarui!</div>';
+        }
+
+        // Refresh user data
+        $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
+        $stmt->execute([$_SESSION['user_id']]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+} else {
+    $message = '<div class="alert alert-danger">Koneksi database gagal!</div>';
+    $user = [
+        'username' => $_SESSION['username'],
+        'full_name' => '',
+        'email' => '',
+        'role' => $_SESSION['role']
+    ];
 }
 ?>
 
